@@ -11,33 +11,48 @@ import java.util.Map;
  * Created by framgia on 16/09/15.
  */
 public class Product {
-    private Integer id;
+    @SerializedName("Id")
+    private int id;
 
     @SerializedName("ShortDescription")
     private String shortDescription;
+
     @SerializedName("ShowDate")
     private String showDate;
+
     @SerializedName("StartDate")
     private String startDate;
+
     @SerializedName("EndDate")
     private String endDate;
+
     @SerializedName("DetailUrl")
     private String detailUrl;
+
     @SerializedName("RestaurantId")
-    private Integer restaurantId;
+    private int restaurantId;
+
     @SerializedName("Picture")
     private String picture;
+
     @SerializedName("MobileImageUrl")
     private String mobileImageUrl;
+
     @SerializedName("RestaurantName")
     private String restaurantName;
+
     @SerializedName("Address")
     private String address;
+
     @SerializedName("UrlRewriteName")
     private String urlRewriteName;
+
     @SerializedName("CityID")
     private Integer cityID;
-    @SerializedName("Cuisines")
+    @SerializedName("MetaDescription")
+    private  String metaDescription;
+
+    /*@SerializedName("Cuisines")
     private List<Cuisine> cuisines = new ArrayList<Cuisine>();
     @SerializedName("Categories")
     private List<Category> categories = new ArrayList<Category>();
@@ -45,229 +60,112 @@ public class Product {
     private List<OffersList> offersList = new ArrayList<OffersList>();
     @SerializedName("MetaDescription")
     private String metaDescription;
+*/
+    // create constructor
 
-
-    /**
-     *
-     * @return
-     * The id
-     */
-    public Integer getId() {
-        return id;
+    public Product (int id, String shortDescription,String showDate,String startDate,String endDate, String detailUrl,int restaurantId,String picture,
+                    String mobileImageUrl,String restaurantName,String address,String urlRewriteName,int cityID){
+        this.id=id;
+        this.shortDescription=shortDescription;
+        this.showDate= showDate;
+        this.startDate = startDate ;
+        this.endDate= endDate ;
+        this.detailUrl= detailUrl ;
+        this.restaurantId= restaurantId;
+        this.picture = picture;
+        this.mobileImageUrl = mobileImageUrl;
+        this.restaurantName = restaurantName;
+        this.address= address;
+        this.urlRewriteName=urlRewriteName;
+        this.cityID=cityID;
     }
 
-    /**
-     *
-     * @param id
-     * The Id
-     */
-    public void setId(Integer id) {
+    public void setMetaDescription(String metaDescription) {
+        this.metaDescription = metaDescription;
+    }
+
+    public String getMetaDescription() {
+        return metaDescription;
+    }
+
+    public void setId(int id) {
         this.id = id;
     }
 
-    /**
-     *
-     * @return
-     * The shortDescription
-     */
+    public int getId() {
+        return id;
+    }
+
+    public void setId(Integer id) {
+        this.id = id;
+    }
     public String getShortDescription() {
         return shortDescription;
     }
-
-    /**
-     *
-     * @param shortDescription
-     * The ShortDescription
-     */
     public void setShortDescription(String shortDescription) {
         this.shortDescription = shortDescription;
     }
-
-    /**
-     *
-     * @return
-     * The showDate
-     */
     public String getShowDate() {
         return showDate;
     }
-
-    /**
-     *
-     * @param showDate
-     * The ShowDate
-     */
     public void setShowDate(String showDate) {
         this.showDate = showDate;
     }
-
-    /**
-     *
-     * @return
-     * The startDate
-     */
     public String getStartDate() {
         return startDate;
     }
-
-    /**
-     *
-     * @param startDate
-     * The StartDate
-     */
     public void setStartDate(String startDate) {
         this.startDate = startDate;
     }
-
-    /**
-     *
-     * @return
-     * The endDate
-     */
     public String getEndDate() {
         return endDate;
     }
-
-    /**
-     *
-     * @param endDate
-     * The EndDate
-     */
     public void setEndDate(String endDate) {
         this.endDate = endDate;
     }
-
-
-    /**
-     *
-     * @return
-     * The detailUrl
-     */
     public String getDetailUrl() {
         return detailUrl;
     }
-
-    /**
-     *
-     * @param detailUrl
-     * The DetailUrl
-     */
     public void setDetailUrl(String detailUrl) {
         this.detailUrl = detailUrl;
     }
-
-    /**
-     *
-     * @return
-     * The restaurantId
-     */
     public Integer getRestaurantId() {
         return restaurantId;
     }
-
-    /**
-     *
-     * @param restaurantId
-     * The RestaurantId
-     */
     public void setRestaurantId(Integer restaurantId) {
         this.restaurantId = restaurantId;
     }
-
-    /**
-     *
-     * @return
-     * The picture
-     */
     public String getPicture() {
         return picture;
     }
-
-    /**
-     *
-     * @param picture
-     * The Picture
-     */
     public void setPicture(String picture) {
         this.picture = picture;
     }
-
-    /**
-     *
-     * @return
-     * The mobileImageUrl
-     */
     public String getMobileImageUrl() {
         return mobileImageUrl;
     }
-
-    /**
-     *
-     * @param mobileImageUrl
-     * The MobileImageUrl
-     */
     public void setMobileImageUrl(String mobileImageUrl) {
         this.mobileImageUrl = mobileImageUrl;
     }
-
-    /**
-     *
-     * @return
-     * The restaurantName
-     */
     public String getRestaurantName() {
         return restaurantName;
     }
 
-    /**
-     * @param restaurantName
-     */
-
     public void setRestaurantName(String restaurantName) {
         this.restaurantName = restaurantName;
     }
-
-    /**
-     *
-     * @return
-     * The address
-     */
     public String getAddress() {
         return address;
     }
-
-    /**
-     *
-     * @param address
-     * The Address
-     */
     public void setAddress(String address) {
         this.address = address;
     }
-
-    /**
-     *
-     * @return
-     * The urlRewriteName
-     */
     public String getUrlRewriteName() {
         return urlRewriteName;
     }
-
-    /**
-     *
-     * @param urlRewriteName
-     * The UrlRewriteName
-     */
     public void setUrlRewriteName(String urlRewriteName) {
         this.urlRewriteName = urlRewriteName;
     }
-
-    /**
-     *
-     * @return
-     * The cityID
-     */
     public Integer getCityID() {
         return cityID;
     }
@@ -277,6 +175,7 @@ public class Product {
         this.cityID = cityID;
     }
 
+/*
 
     public List<Cuisine> getCuisines() {
         return cuisines;
@@ -314,5 +213,6 @@ public class Product {
     public void setMetaDescription(String metaDescription) {
         this.metaDescription = metaDescription;
     }
+*/
 
 }

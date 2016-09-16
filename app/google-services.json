@@ -1,0 +1,73 @@
+{
+  "project_info": {
+    "project_number": "44342740921",
+    "firebase_url": "https://pokemongo-a407d.firebaseio.com",
+    "project_id": "pokemongo-a407d",
+    "storage_bucket": "pokemongo-a407d.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:44342740921:android:33d4ef950982b830",
+        "android_client_info": {
+          "package_name": "com.example.framgia.okhttprest"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "44342740921-akrmuibbj0c959r2b21np1b552nu4p3r.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCZw6f0UfgWnHhSx1NdxixXCdZ-YvJQYUU"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 1,
+          "other_platform_oauth_client": []
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:44342740921:android:d708b34288cede6c",
+        "android_client_info": {
+          "package_name": "retrofit.biliion.com.jsoupgetdata"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "44342740921-akrmuibbj0c959r2b21np1b552nu4p3r.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCZw6f0UfgWnHhSx1NdxixXCdZ-YvJQYUU"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 1,
+          "other_platform_oauth_client": []
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -7,10 +7,20 @@ package retrofit.biliion.com.jsoupgetdata;
         import android.util.Log;
         import android.widget.TextView;
 
+        import com.firebase.client.Firebase;
+        import com.google.firebase.storage.FirebaseStorage;
+        import com.google.firebase.storage.StorageReference;
         import com.google.gson.Gson;
         import com.google.gson.GsonBuilder;
 
+        import org.json.JSONArray;
+        import org.json.JSONException;
+        import org.json.JSONObject;
+
         import java.io.IOException;
+        import java.util.HashMap;
+        import java.util.List;
+        import java.util.Map;
 
         import okhttp3.Call;
         import okhttp3.Callback;
@@ -21,17 +31,16 @@ package retrofit.biliion.com.jsoupgetdata;
         import okhttp3.RequestBody;
         import okhttp3.Response;
         import retrofit.biliion.com.jsoupgetdata.data.Product;
+        import retrofit.biliion.com.jsoupgetdata.data.ProductResponse;
 
-/**
- * Created by framgia on 16/09/15.
- */
 public class OkhttpCrawler extends AppCompatActivity {
+    public String response ;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
+        Firebase.setAndroidContext(this);
         new GetProduct().execute();
     }
 
@@ -39,28 +48,57 @@ public class OkhttpCrawler extends AppCompatActivity {
         private static final String url = "https://www.tablenow.vn/List/GetListReservationByFilter";
         private static final String headerRequest = "application/json; charset=utf-8";
         private static final String JSONPayLoad = "{\"filter\":{\"Keyword\":null,\"CategoryIds\":[],\"CuisineIds\":[],\"DistrictIds\":[],\"PageIndex\":1,\"PageSize\":20,\"SortType\":14}}";
+
+        private static final String JsonPayLoadHead = "{\"filter\":{\"Keyword\":null,\"CategoryIds\":[],\"CuisineIds\":[],\"DistrictIds\":[],\"PageIndex\":";
+        private static final String JsonPayLoadEnd =",\"PageSize\":20,\"SortType\":14}}";
+
         Gson gson = new GsonBuilder().create();
         String responseData ="";
-        String RestaurantName="";
+        String nameRes="";
+        public  Firebase ref = new Firebase("https://foodylove.firebaseio.com/restaurant/");
 
-        
         @Override
         protected String doInBackground(Void... voids) {
-            MediaType JSON = MediaType.parse(headerRequest);
+            Map<String,Object> postData = new HashMap<String,Object>();
+            for(int i = 1 ; i<30;i++){
+                String jsonPayload = JsonPayLoadHead+i+""+JsonPayLoadEnd;
+                MediaType JSON = MediaType.parse(headerRequest);
 
-            OkHttpClient client = new OkHttpClient();
+                OkHttpClient client = new OkHttpClient();
 
-            RequestBody requestBody = RequestBody.create(JSON,JSONPayLoad);
-            Request request = new Request.Builder().url(url).post(requestBody).build();
-            try {
-                Response response = client.newCall(request).execute();
-                responseData=response.body().string();
-                Product product = gson.fromJson(responseData,Product.class);
-                RestaurantName = product.getRestaurantName();
-            } catch (IOException e) {
+                RequestBody requestBody = RequestBody.create(JSON,jsonPayload);
+                Request request = new Request.Builder().url(url).post(requestBody).build();
+                try {
+                    Response response = client.newCall(request).execute();
+                    responseData=response.body().string();
 
+                    try {
+                        JSONObject reponseOb = new JSONObject(responseData);
+                        JSONObject jsonResult = reponseOb.getJSONObject("result");
+
+                        String result = jsonResult.toString();
+                        ProductResponse product = gson.fromJson(result,ProductResponse.class);
+
+                        nameRes = product.getTotalCounts()+"";
+
+                        List<Product> productList =product.getItems();
+
+
+                        for(int j = 0 ; j <productList.size() ; j++){
+                            postData.put(productList.get(j).getRestaurantId()+"",productList.get(j));
+                        }
+
+
+
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+                } catch (IOException e) {
+
+                }
             }
-            return RestaurantName;
+            ref.push().setValue(postData);
+            return nameRes;
         }
 
         @Override
