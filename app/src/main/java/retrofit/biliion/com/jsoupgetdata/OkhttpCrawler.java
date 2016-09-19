@@ -1,13 +1,18 @@
 package retrofit.biliion.com.jsoupgetdata;
 
+        import android.app.ProgressDialog;
         import android.os.AsyncTask;
         import android.os.Bundle;
         import android.support.annotation.Nullable;
         import android.support.v7.app.AppCompatActivity;
         import android.util.Log;
         import android.widget.TextView;
+        import android.widget.Toast;
 
+        import com.firebase.client.DataSnapshot;
         import com.firebase.client.Firebase;
+        import com.firebase.client.FirebaseError;
+        import com.firebase.client.ValueEventListener;
         import com.google.firebase.storage.FirebaseStorage;
         import com.google.firebase.storage.StorageReference;
         import com.google.gson.Gson;
@@ -32,6 +37,10 @@ package retrofit.biliion.com.jsoupgetdata;
         import okhttp3.Response;
         import retrofit.biliion.com.jsoupgetdata.data.Product;
         import retrofit.biliion.com.jsoupgetdata.data.ProductResponse;
+        import retrofit.biliion.com.jsoupgetdata.deliverynow.DeliveryItems;
+        import retrofit.biliion.com.jsoupgetdata.deliverynow.DeliveryResponse;
+
+        import static android.widget.Toast.LENGTH_SHORT;
 
 public class OkhttpCrawler extends AppCompatActivity {
     public String response ;
@@ -41,9 +50,124 @@ public class OkhttpCrawler extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         Firebase.setAndroidContext(this);
-        new GetProduct().execute();
+        // run under main thread
+        /*new DiliveryNow(this).execute();*/
+        Firebase refCount = new Firebase("https://quizlet-card.firebaseio.com/poke1/");
+        refCount.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                for (DataSnapshot snap: dataSnapshot.getChildren()) {
+                    Log.e(snap.getKey(),snap.getChildrenCount() + "");
+                    Toast.makeText(OkhttpCrawler.this,snap.getChildrenCount() + "",Toast.LENGTH_LONG).show();
+                }
+            }
+
+            @Override
+            public void onCancelled(FirebaseError firebaseError) {
+
+            }
+
+        });
     }
 
+
+    private class DiliveryNow extends AsyncTask<Void,Void,String>{
+        private static final String url="https://www.deliverynow.vn/List/GetListDeliveryByFilter";
+        private static final String content_typte ="application/json; charset=utf-8";
+        private static final String request_Payload ="{\"filters\":{\"Keyword\":null,\"CategoryIds\":null,\"DistrictIds\":null,\"CuisineIds\":null,\"SortType\":11,\"PageIndex\":1,\"PageSize\":30,\"Lat\":10.76721,\"Long\":106.68773799999997}}";
+        private String request_payload_head ="{\"filters\":{\"Keyword\":null,\"CategoryIds\":null,\"DistrictIds\":null,\"CuisineIds\":null,\"SortType\":11,\"PageIndex\":";
+        private String request_payload_end=",\"PageSize\":1,\"Lat\":10.76721,\"Long\":106.68773799999997}}";
+        // array int districtID
+
+        private String payload_id_head ="{\"filters\":{\"Keyword\":null,\"CategoryIds\":null,\"DistrictIds\":[";
+        private String payload_id_end="],\"CuisineIds\":null,\"SortType\":11,\"PageIndex\":0,\"PageSize\":1,\"Lat\":10.76721,\"Long\":106.68773799999997}}";
+        private Gson gson = new GsonBuilder().create();
+        String responseJson = "";
+        public  Firebase ref = new Firebase("https://quizlet-card.firebaseio.com/poke1/");
+        int totalCount;
+        public ProgressDialog mProgressDialog;
+
+        private int [] arrDistrictID ={1, 6, 9, 12, 15, 19, 693, 695, 4, 7, 10, 13, 16, 2, 696, 694, 5, 8, 11, 14, 17, 18, 699, 698,
+                25,29,21,23,674,677,680,683,686,689,28,24,26,945,675,678,681,684,687,691,20,22,27,690,676,679,682,685,688,692,
+                303,306,309,304,307,302,305,308,301,30,33,158,31,34,159,32,35,119,44,46,121,117,45,47,118,43,120,109,112,36,39,116,110,113,38,42,114,111,37,40,41,115};
+
+        private ProgressDialog dialog;
+
+        // create constructor
+        public DiliveryNow(OkhttpCrawler activity) {
+            dialog = new ProgressDialog(activity);
+        }
+
+        @Override
+        protected void onPreExecute() {
+            dialog.setMessage("Doing something, please wait.");
+            dialog.show();
+        }
+        @Override
+        protected String doInBackground(Void... ints) {
+                Map<String,DeliveryItems> items = new HashMap<String,DeliveryItems>();
+                for(int i=0 ; i<arrDistrictID.length;i++) {
+                    String payload_id = payload_id_head + arrDistrictID[i]+ "" + payload_id_end;
+                    MediaType mediaType = MediaType.parse(content_typte);
+                    OkHttpClient client = new OkHttpClient();
+                    RequestBody body = RequestBody.create(mediaType, payload_id);
+                    Request request = new Request.Builder().url(url).post(body).build();// call method post
+
+                    try {
+                        Response response = client.newCall(request).execute();
+                        responseJson = response.body().string();
+                        JSONObject JsonOb = new JSONObject(responseJson);// create json object from String
+                        JSONObject result = JsonOb.getJSONObject("result");
+                        String JsonResult = result.toString();
+                        DeliveryResponse deliveryResponse = gson.fromJson(JsonResult, DeliveryResponse.class);
+
+                        //start here
+                        totalCount = deliveryResponse.getTotalCount();
+
+                        for (int k = 0; k < totalCount; k++) {
+                            String payload_get_all_data = request_payload_head + k + "" + request_payload_end;
+                            RequestBody requestBody = RequestBody.create(mediaType, payload_get_all_data);
+                            Request request1 = new Request.Builder().url(url).post(requestBody).build();
+                            Response response1 = client.newCall(request1).execute();
+                            JSONObject jsonObject = new JSONObject(response1.body().string());
+                            JSONObject result1 = jsonObject.getJSONObject("result");
+                            DeliveryResponse deliveryResponse1 = gson.fromJson(result1.toString(), DeliveryResponse.class);
+                            List<DeliveryItems> deliveryItemsList = deliveryResponse1.getListResult();
+                            for (int j = 0; j < deliveryItemsList.size(); j++) {
+                                items.put(deliveryItemsList.get(j).getRestaurantId() + "", deliveryItemsList.get(j));
+                            }
+                        }
+
+                    /*List<DeliveryItems> deliveryItemsList = deliveryResponse.getListResult();
+                    for(int i =0; i<deliveryItemsList.size();i++){
+                        items.put(deliveryItemsList.get(i).getRestaurantId()+"",deliveryItemsList.get(i));
+                    }*/
+
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+                }
+            ref.push().setValue(items);
+            return "Done" ;
+        }
+
+
+
+
+        @Override
+        protected void onPostExecute(String s) {
+            super.onPostExecute(s);
+            if (dialog.isShowing()) {
+                dialog.dismiss();
+            }
+            TextView textView = (TextView)findViewById(R.id.text);
+            textView.setText(s);
+        }
+    }
+
+    //--------------------------------------
     private class GetProduct extends AsyncTask<Void,Void,String>{
         private static final String url = "https://www.tablenow.vn/List/GetListReservationByFilter";
         private static final String headerRequest = "application/json; charset=utf-8";
