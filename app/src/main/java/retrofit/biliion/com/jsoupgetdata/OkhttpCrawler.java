@@ -30,6 +30,7 @@ package retrofit.biliion.com.jsoupgetdata;
         import okhttp3.Call;
         import okhttp3.Callback;
         import okhttp3.HttpUrl;
+        import okhttp3.Interceptor;
         import okhttp3.MediaType;
         import okhttp3.OkHttpClient;
         import okhttp3.Request;
@@ -51,8 +52,9 @@ public class OkhttpCrawler extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         Firebase.setAndroidContext(this);
         // run under main thread
-        /*new DiliveryNow(this).execute();*/
-        Firebase refCount = new Firebase("https://quizlet-card.firebaseio.com/poke1/");
+
+        new GetProduct().execute();
+        /*Firebase refCount = new Firebase("https://quizlet-card.firebaseio.com/poke1/");
         refCount.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
@@ -67,7 +69,7 @@ public class OkhttpCrawler extends AppCompatActivity {
 
             }
 
-        });
+        });*/
     }
 
 
@@ -76,21 +78,22 @@ public class OkhttpCrawler extends AppCompatActivity {
         private static final String content_typte ="application/json; charset=utf-8";
         private static final String request_Payload ="{\"filters\":{\"Keyword\":null,\"CategoryIds\":null,\"DistrictIds\":null,\"CuisineIds\":null,\"SortType\":11,\"PageIndex\":1,\"PageSize\":30,\"Lat\":10.76721,\"Long\":106.68773799999997}}";
         private String request_payload_head ="{\"filters\":{\"Keyword\":null,\"CategoryIds\":null,\"DistrictIds\":null,\"CuisineIds\":null,\"SortType\":11,\"PageIndex\":";
-        private String request_payload_end=",\"PageSize\":1,\"Lat\":10.76721,\"Long\":106.68773799999997}}";
+        private String request_payload_end=",\"PageSize\":20,\"Lat\":10.76721,\"Long\":106.68773799999997}}";
         // array int districtID
 
         private String payload_id_head ="{\"filters\":{\"Keyword\":null,\"CategoryIds\":null,\"DistrictIds\":[";
         private String payload_id_end="],\"CuisineIds\":null,\"SortType\":11,\"PageIndex\":0,\"PageSize\":1,\"Lat\":10.76721,\"Long\":106.68773799999997}}";
         private Gson gson = new GsonBuilder().create();
         String responseJson = "";
-        public  Firebase ref = new Firebase("https://quizlet-card.firebaseio.com/poke1/");
+        public  Firebase ref = new Firebase("https://ionic-chatappwthfirebase.firebaseio.com/members/");
         int totalCount;
         public ProgressDialog mProgressDialog;
-
+        private String requsetURL ;
         private int [] arrDistrictID ={1, 6, 9, 12, 15, 19, 693, 695, 4, 7, 10, 13, 16, 2, 696, 694, 5, 8, 11, 14, 17, 18, 699, 698,
                 25,29,21,23,674,677,680,683,686,689,28,24,26,945,675,678,681,684,687,691,20,22,27,690,676,679,682,685,688,692,
                 303,306,309,304,307,302,305,308,301,30,33,158,31,34,159,32,35,119,44,46,121,117,45,47,118,43,120,109,112,36,39,116,110,113,38,42,114,111,37,40,41,115};
 
+        int countFor= 0;
         private ProgressDialog dialog;
 
         // create constructor
@@ -103,57 +106,65 @@ public class OkhttpCrawler extends AppCompatActivity {
             dialog.setMessage("Doing something, please wait.");
             dialog.show();
         }
+
         @Override
         protected String doInBackground(Void... ints) {
-                Map<String,DeliveryItems> items = new HashMap<String,DeliveryItems>();
+            Map<String,DeliveryItems> items = new HashMap<String,DeliveryItems>();
+            try {
                 for(int i=0 ; i<arrDistrictID.length;i++) {
-                    String payload_id = payload_id_head + arrDistrictID[i]+ "" + payload_id_end;
-                    MediaType mediaType = MediaType.parse(content_typte);
+                    countFor++;
+                    String payload_id = payload_id_head + ""+arrDistrictID[i]+ "" + payload_id_end; //ok
+                    /*requsetURL+= payload_id+"\n";*/
+                    MediaType mediaType = MediaType.parse(content_typte); //ok
                     OkHttpClient client = new OkHttpClient();
-                    RequestBody body = RequestBody.create(mediaType, payload_id);
+                    RequestBody body = RequestBody.create(mediaType, payload_id); //ok
                     Request request = new Request.Builder().url(url).post(body).build();// call method post
 
-                    try {
-                        Response response = client.newCall(request).execute();
-                        responseJson = response.body().string();
-                        JSONObject JsonOb = new JSONObject(responseJson);// create json object from String
-                        JSONObject result = JsonOb.getJSONObject("result");
-                        String JsonResult = result.toString();
-                        DeliveryResponse deliveryResponse = gson.fromJson(JsonResult, DeliveryResponse.class);
 
-                        //start here
-                        totalCount = deliveryResponse.getTotalCount();
+                    Response response = client.newCall(request).execute();
+                    responseJson = response.body().string();
+                    JSONObject JsonOb = new JSONObject(responseJson);// create json object from String
+                    JSONObject result = JsonOb.getJSONObject("result");
+                    String JsonResult = result.toString();
+                    DeliveryResponse deliveryResponse = gson.fromJson(JsonResult, DeliveryResponse.class);
 
-                        for (int k = 0; k < totalCount; k++) {
-                            String payload_get_all_data = request_payload_head + k + "" + request_payload_end;
-                            RequestBody requestBody = RequestBody.create(mediaType, payload_get_all_data);
-                            Request request1 = new Request.Builder().url(url).post(requestBody).build();
-                            Response response1 = client.newCall(request1).execute();
-                            JSONObject jsonObject = new JSONObject(response1.body().string());
-                            JSONObject result1 = jsonObject.getJSONObject("result");
-                            DeliveryResponse deliveryResponse1 = gson.fromJson(result1.toString(), DeliveryResponse.class);
-                            List<DeliveryItems> deliveryItemsList = deliveryResponse1.getListResult();
-                            for (int j = 0; j < deliveryItemsList.size(); j++) {
-                                items.put(deliveryItemsList.get(j).getRestaurantId() + "", deliveryItemsList.get(j));
-                            }
+                    //start here
+                    totalCount = deliveryResponse.getTotalCount();
+                    requsetURL+=totalCount+"---";
+                    /*int nguyen = totalCount/20;
+                    int du = totalCount%20;
+
+                    if(nguyen>=1){
+
+                    }*/
+                   /* }
+                    for (int k = 0; k < nguyen; k++) {
+                        String payload_get_all_data = request_payload_head + k + "" + request_payload_end;
+                        RequestBody requestBody = RequestBody.create(mediaType, payload_get_all_data);
+                        Request request1 = new Request.Builder().url(url).post(requestBody).build();
+                        Response response1 = client.newCall(request1).execute();
+                        JSONObject jsonObject = new JSONObject(response1.body().string());
+                        JSONObject result1 = jsonObject.getJSONObject("result");
+                        DeliveryResponse deliveryResponse1 = gson.fromJson(result1.toString(), DeliveryResponse.class);
+                        List<DeliveryItems> deliveryItemsList = deliveryResponse1.getListResult();
+                        for (int j = 0; j < deliveryItemsList.size(); j++) {
+                            items.put(deliveryItemsList.get(j).getRestaurantId() + "", deliveryItemsList.get(j));
                         }
-
+                    }
+*/
                     /*List<DeliveryItems> deliveryItemsList = deliveryResponse.getListResult();
                     for(int i =0; i<deliveryItemsList.size();i++){
                         items.put(deliveryItemsList.get(i).getRestaurantId()+"",deliveryItemsList.get(i));
                     }*/
-
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    } catch (JSONException e) {
-                        e.printStackTrace();
-                    }
                 }
+            } catch (IOException e) {
+                e.printStackTrace();
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
             ref.push().setValue(items);
-            return "Done" ;
+            return requsetURL ;
         }
-
-
 
 
         @Override
@@ -184,14 +195,37 @@ public class OkhttpCrawler extends AppCompatActivity {
         @Override
         protected String doInBackground(Void... voids) {
             Map<String,Object> postData = new HashMap<String,Object>();
-            for(int i = 1 ; i<30;i++){
-                String jsonPayload = JsonPayLoadHead+i+""+JsonPayLoadEnd;
+
+                String jsonPayload = JsonPayLoadHead+1+""+JsonPayLoadEnd;
+
                 MediaType JSON = MediaType.parse(headerRequest);
 
-                OkHttpClient client = new OkHttpClient();
+                OkHttpClient client = new OkHttpClient().newBuilder().addInterceptor(new Interceptor() {
+                    @Override
+                    public Response intercept(Chain chain) throws IOException {
+                        final Request original = chain.request();
 
-                RequestBody requestBody = RequestBody.create(JSON,jsonPayload);
-                Request request = new Request.Builder().url(url).post(requestBody).build();
+                        final Request authorized = original.newBuilder()
+                                .addHeader("Cookie", "ASP.NET_SessionId=nll45ij4wavvhakeiqhu0hmc; view=grid; _ga=GA1.2.36993942.1474246083; _gat=1; DeliveryNow.Web.AuthenFlag=NotAuthentication; version=1.0.0; floc=218")
+                                .build();
+
+                        return chain.proceed(authorized);
+
+                    }
+                }).build();
+
+                RequestBody requestBody = RequestBody.create(JSON,"{}");
+                Request request = new Request.Builder()
+                        .addHeader("Origin","https:/www.deliverynow.vn")
+                        .addHeader("Referer","https://www.deliverynow.vn/ha-noi/danh-sach-dia-diem-giao-tan-noi-trang-2").url(url).
+                                post(requestBody).build();
+                /*
+                .header("User-Agent", "Atime Online " +
+                        "1.0" + " (Android; "
+                        + String.valueOf(android.os.Build.MANUFACTURER) + ";"
+                        + String.valueOf(android.os.Build.MODEL) + "; ver "
+                        + android.os.Build.VERSION.RELEASE + ")")
+                * */
                 try {
                     Response response = client.newCall(request).execute();
                     responseData=response.body().string();
@@ -220,9 +254,9 @@ public class OkhttpCrawler extends AppCompatActivity {
                 } catch (IOException e) {
 
                 }
-            }
-            ref.push().setValue(postData);
-            return nameRes;
+
+            /*ref.push().setValue(postData);*/
+            return responseData;
         }
 
         @Override
@@ -233,6 +267,7 @@ public class OkhttpCrawler extends AppCompatActivity {
         }
     }
 
+    ////////////////////
 
     private class ReceivingData extends AsyncTask<Void,Void,String>{
         String responseData ;
