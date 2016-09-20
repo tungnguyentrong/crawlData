@@ -13,6 +13,8 @@ package retrofit.biliion.com.jsoupgetdata;
         import com.firebase.client.Firebase;
         import com.firebase.client.FirebaseError;
         import com.firebase.client.ValueEventListener;
+        import com.google.firebase.database.DatabaseReference;
+        import com.google.firebase.database.FirebaseDatabase;
         import com.google.firebase.storage.FirebaseStorage;
         import com.google.firebase.storage.StorageReference;
         import com.google.gson.Gson;
@@ -53,8 +55,8 @@ public class OkhttpCrawler extends AppCompatActivity {
         Firebase.setAndroidContext(this);
         // run under main thread
 
-        new GetProduct().execute();
-        /*Firebase refCount = new Firebase("https://quizlet-card.firebaseio.com/poke1/");
+        new GetProduct(this).execute();
+        Firebase refCount = new Firebase("https://crackling-heat-7933.firebaseio.com/");
         refCount.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
@@ -69,7 +71,11 @@ public class OkhttpCrawler extends AppCompatActivity {
 
             }
 
-        });*/
+        });
+
+        DatabaseReference database = FirebaseDatabase.getInstance().getReference();
+        DatabaseReference myref =database.getReference("newref");
+        myref.setValue("test data");
     }
 
 
@@ -180,23 +186,44 @@ public class OkhttpCrawler extends AppCompatActivity {
 
     //--------------------------------------
     private class GetProduct extends AsyncTask<Void,Void,String>{
-        private static final String url = "https://www.tablenow.vn/List/GetListReservationByFilter";
+        private static final String url = "https://www.deliverynow.vn/List/GetListDeliveryByFilter";
         private static final String headerRequest = "application/json; charset=utf-8";
         private static final String JSONPayLoad = "{\"filter\":{\"Keyword\":null,\"CategoryIds\":[],\"CuisineIds\":[],\"DistrictIds\":[],\"PageIndex\":1,\"PageSize\":20,\"SortType\":14}}";
 
         private static final String JsonPayLoadHead = "{\"filter\":{\"Keyword\":null,\"CategoryIds\":[],\"CuisineIds\":[],\"DistrictIds\":[],\"PageIndex\":";
         private static final String JsonPayLoadEnd =",\"PageSize\":20,\"SortType\":14}}";
 
+        private static final String hn_payload_head ="{\"filters\":{\"Keyword\":null,\"CategoryIds\":null,\"DistrictIds\":null,\"CuisineIds\":null,\"SortType\":11,\"PageIndex\":";
+        private static final String hn_payload_end =",\"PageSize\":30,\"Lat\":21.019194499999998,\"Long\":105.7879486}}";
+
         Gson gson = new GsonBuilder().create();
         String responseData ="";
         String nameRes="";
         public  Firebase ref = new Firebase("https://foodylove.firebaseio.com/restaurant/");
+        private String [] cookie_location={
+                "flg=vn; ASP.NET_SessionId=nll45ij4wavvhakeiqhu0hmc; view=grid; _ga=GA1.2.36993942.1474246083; _gat=1; DeliveryNow.Web.AuthenFlag=NotAuthentication; version=1.0.0; floc=218",
+                "flg=vn; ASP.NET_SessionId=nll45ij4wavvhakeiqhu0hmc; view=grid; _ga=GA1.2.36993942.1474246083; _gat=1; DeliveryNow.Web.AuthenFlag=NotAuthentication; version=1.0.0; floc=218",
+                "flg=vn; ASP.NET_SessionId=nll45ij4wavvhakeiqhu0hmc; view=grid; _gat=1; _ga=GA1.2.36993942.1474246083; DeliveryNow.Web.AuthenFlag=NotAuthentication; version=1.0.0; floc=219",};
+        private ProgressDialog dialog;
+
+        // create constructor
+        public GetProduct(OkhttpCrawler activity) {
+            dialog = new ProgressDialog(activity);
+        }
+
+        @Override
+        protected void onPreExecute() {
+            dialog.setMessage("Loading data, please wait...");
+            dialog.show();
+        }
 
         @Override
         protected String doInBackground(Void... voids) {
-            Map<String,Object> postData = new HashMap<String,Object>();
-
-                String jsonPayload = JsonPayLoadHead+1+""+JsonPayLoadEnd;
+            Map<String,DeliveryItems> items = new HashMap<String,DeliveryItems>();
+            /*Firebase ref = new Firebase("https://pokemongo-a407d.firebaseio.com/");*/
+            // load Ha Noi
+            for(int i =1 ; i<39;i++){
+                String jsonPayload = hn_payload_head+""+i+""+hn_payload_end;
 
                 MediaType JSON = MediaType.parse(headerRequest);
 
@@ -204,9 +231,9 @@ public class OkhttpCrawler extends AppCompatActivity {
                     @Override
                     public Response intercept(Chain chain) throws IOException {
                         final Request original = chain.request();
-
+                        //this is cooike of Ha Noi
                         final Request authorized = original.newBuilder()
-                                .addHeader("Cookie", "ASP.NET_SessionId=nll45ij4wavvhakeiqhu0hmc; view=grid; _ga=GA1.2.36993942.1474246083; _gat=1; DeliveryNow.Web.AuthenFlag=NotAuthentication; version=1.0.0; floc=218")
+                                .addHeader("Cookie", "flg=vn; ASP.NET_SessionId=nll45ij4wavvhakeiqhu0hmc; view=grid; _ga=GA1.2.36993942.1474246083; _gat=1; DeliveryNow.Web.AuthenFlag=NotAuthentication; version=1.0.0; floc=218")
                                 .build();
 
                         return chain.proceed(authorized);
@@ -214,18 +241,9 @@ public class OkhttpCrawler extends AppCompatActivity {
                     }
                 }).build();
 
-                RequestBody requestBody = RequestBody.create(JSON,"{}");
-                Request request = new Request.Builder()
-                        .addHeader("Origin","https:/www.deliverynow.vn")
-                        .addHeader("Referer","https://www.deliverynow.vn/ha-noi/danh-sach-dia-diem-giao-tan-noi-trang-2").url(url).
-                                post(requestBody).build();
-                /*
-                .header("User-Agent", "Atime Online " +
-                        "1.0" + " (Android; "
-                        + String.valueOf(android.os.Build.MANUFACTURER) + ";"
-                        + String.valueOf(android.os.Build.MODEL) + "; ver "
-                        + android.os.Build.VERSION.RELEASE + ")")
-                * */
+                RequestBody requestBody = RequestBody.create(JSON,jsonPayload);
+                Request request = new Request.Builder().url(url).
+                        post(requestBody).build();
                 try {
                     Response response = client.newCall(request).execute();
                     responseData=response.body().string();
@@ -235,18 +253,15 @@ public class OkhttpCrawler extends AppCompatActivity {
                         JSONObject jsonResult = reponseOb.getJSONObject("result");
 
                         String result = jsonResult.toString();
-                        ProductResponse product = gson.fromJson(result,ProductResponse.class);
+                        DeliveryResponse product = gson.fromJson(result,DeliveryResponse.class);
 
-                        nameRes = product.getTotalCounts()+"";
+                        nameRes = product.getTotalCount()+"---\n";
+                        /*nameRes += jsonPayload+"\n";*/
 
-                        List<Product> productList =product.getItems();
-
-
-                        for(int j = 0 ; j <productList.size() ; j++){
-                            postData.put(productList.get(j).getRestaurantId()+"",productList.get(j));
+                        List<DeliveryItems> listItemDelivery = product.getListResult();
+                        for(int m = 0 ; m<listItemDelivery.size(); m++){
+                            items.put(listItemDelivery.get(m).getRestaurantId()+"",listItemDelivery.get(m));
                         }
-
-
 
                     } catch (JSONException e) {
                         e.printStackTrace();
@@ -255,13 +270,121 @@ public class OkhttpCrawler extends AppCompatActivity {
 
                 }
 
-            /*ref.push().setValue(postData);*/
-            return responseData;
+            }
+
+           //for Da Nang Location
+            for(int j =1 ; j<10 ; j++){
+
+                String jsonPayload = hn_payload_head+j+""+hn_payload_end;
+
+                MediaType JSON = MediaType.parse(headerRequest);
+
+                OkHttpClient client = new OkHttpClient().newBuilder().addInterceptor(new Interceptor() {
+                    @Override
+                    public Response intercept(Chain chain) throws IOException {
+                        final Request original = chain.request();
+                        //this is cooike of Ha Noi
+                        final Request authorized = original.newBuilder()
+                                .addHeader("Cookie", "flg=vn; ASP.NET_SessionId=nll45ij4wavvhakeiqhu0hmc; view=grid; _gat=1; _ga=GA1.2.36993942.1474246083; DeliveryNow.Web.AuthenFlag=NotAuthentication; version=1.0.0; floc=219")
+                                .build();
+
+                        return chain.proceed(authorized);
+
+                    }
+                }).build();
+
+                RequestBody requestBody = RequestBody.create(JSON,jsonPayload);
+                Request request = new Request.Builder().url(url).
+                        post(requestBody).build();
+
+                try {
+                    Response response = client.newCall(request).execute();
+                    responseData=response.body().string();
+
+                    try {
+                        JSONObject reponseOb = new JSONObject(responseData);
+                        JSONObject jsonResult = reponseOb.getJSONObject("result");
+
+                        String result = jsonResult.toString();
+                        DeliveryResponse product = gson.fromJson(result,DeliveryResponse.class);
+
+                        nameRes = product.getTotalCount()+"---\n";
+
+                        List<DeliveryItems> listItemDelivery = product.getListResult();
+                        for(int m = 0 ; m<listItemDelivery.size(); m++){
+                            items.put(listItemDelivery.get(m).getRestaurantId()+"",listItemDelivery.get(m));
+                        }
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+                } catch (IOException e) {
+
+                }
+            }
+
+
+            // for Sai Gon Location
+             for (int k =1 ; k<68 ; k++){
+                 String jsonPayload = hn_payload_head+k+""+hn_payload_end;
+
+                 MediaType JSON = MediaType.parse(headerRequest);
+
+                 OkHttpClient client = new OkHttpClient().newBuilder().addInterceptor(new Interceptor() {
+                     @Override
+                     public Response intercept(Chain chain) throws IOException {
+                         final Request original = chain.request();
+                         //this is cooike of Ha Noi
+                         final Request authorized = original.newBuilder()
+                                 .addHeader("Cookie", "flg=vn; ASP.NET_SessionId=nll45ij4wavvhakeiqhu0hmc; view=grid; _gat=1; _ga=GA1.2.36993942.1474246083; DeliveryNow.Web.AuthenFlag=NotAuthentication; version=1.0.0; floc=217")
+                                 .build();
+
+                         return chain.proceed(authorized);
+
+                     }
+                 }).build();
+
+                 RequestBody requestBody = RequestBody.create(JSON,jsonPayload);
+                 Request request = new Request.Builder().url(url).
+                         post(requestBody).build();
+
+                 try {
+                     Response response = client.newCall(request).execute();
+                     responseData=response.body().string();
+
+                     try {
+                         JSONObject reponseOb = new JSONObject(responseData);
+                         JSONObject jsonResult = reponseOb.getJSONObject("result");
+
+                         String result = jsonResult.toString();
+                         DeliveryResponse product = gson.fromJson(result,DeliveryResponse.class);
+
+                         nameRes = product.getTotalCount()+"---\n";
+
+
+                         List<DeliveryItems> listItemDelivery = product.getListResult();
+                         for(int m = 0 ; m<listItemDelivery.size(); m++){
+                             items.put(listItemDelivery.get(m).getRestaurantId()+"",listItemDelivery.get(m));
+                         }
+                     } catch (JSONException e) {
+                         e.printStackTrace();
+                     }
+                 } catch (IOException e) {
+
+                 }
+             }
+            FirebaseDatabase database = FirebaseDatabase.getInstance();
+            DatabaseReference myref =database.getReference("newref");
+
+            /*ref.push().setValue(items);*/
+            return nameRes;
         }
 
         @Override
         protected void onPostExecute(String s) {
             super.onPostExecute(s);
+            if (dialog.isShowing()) {
+                dialog.dismiss();
+            }
             TextView textView = (TextView)findViewById(R.id.text);
             textView.setText(s);
         }
